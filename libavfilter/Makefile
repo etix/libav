@@ -40,6 +40,7 @@ OBJS-$(CONFIG_VOLUME_FILTER)                 += af_volume.o
 OBJS-$(CONFIG_ANULLSRC_FILTER)               += asrc_anullsrc.o
 
 OBJS-$(CONFIG_ANULLSINK_FILTER)              += asink_anullsink.o
+OBJS-$(CONFIG_DTMF_FILTER)                   += af_dtmf.o
 
 OBJS-$(CONFIG_BLACKFRAME_FILTER)             += vf_blackframe.o
 OBJS-$(CONFIG_BOXBLUR_FILTER)                += vf_boxblur.o
