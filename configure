@@ -1141,6 +1141,7 @@ EXTERNAL_LIBRARY_LIST="
     frei0r
     gnutls
     libbs2b
+    libbmd
     libcdio
     libdc1394
     libfaac
@@ -2086,6 +2087,7 @@ xwma_demuxer_select="riffdec"
 alsa_indev_deps="alsa_asoundlib_h snd_pcm_htimestamp"
 alsa_outdev_deps="alsa_asoundlib_h"
 bktr_indev_deps_any="dev_bktr_ioctl_bt848_h machine_ioctl_bt848_h dev_video_bktr_ioctl_bt848_h dev_ic_bt8xx_h"
+bmd_indev_deps="libbmd"
 dv1394_indev_deps="dv1394"
 dv1394_indev_select="dv_demuxer"
 fbdev_indev_deps="linux_fb_h"
@@ -4157,6 +4159,7 @@ enabled avisynth          && { { check_header "avisynth/avisynth_c.h" && check_l
                                die "ERROR: LoadLibrary/dlopen not found, or avisynth header not found"; }
 enabled frei0r            && { check_header frei0r.h || die "ERROR: frei0r.h header not found"; }
 enabled gnutls            && require_pkg_config gnutls gnutls/gnutls.h gnutls_global_init
+enabled libbmd            && require_pkg_config libbmd libbmd/decklink_capture.h decklink_capture_alloc
 enabled libbs2b           && require_pkg_config libbs2b bs2b.h bs2b_open
 enabled libfaac           && require2 libfaac "stdint.h faac.h" faacEncGetVersion -lfaac
 enabled libfdk_aac        && require libfdk_aac fdk-aac/aacenc_lib.h aacEncOpen -lfdk-aac
