@@ -251,8 +251,6 @@ static int video_callback(void *priv, uint8_t *frame,
 
     av_init_packet(&pkt);
 
-    av_log(ctx, AV_LOG_INFO, "Video Frame %"PRId64"\n", timestamp);
-
     pkt.pts = pkt.dts = timestamp / ctx->video_st->time_base.num;
     pkt.duration      = duration  / ctx->video_st->time_base.num;
 
@@ -273,8 +271,6 @@ static int audio_callback(void *priv, uint8_t *frame,
     AVPacket pkt;
 
     av_init_packet(&pkt);
-
-    av_log(ctx, AV_LOG_INFO, "Audio Frame %"PRId64"\n", timestamp);
 
     pkt.size          = nb_samples * c->channels *
                         (ctx->conf.audio_sample_depth / 8);
@@ -299,8 +295,6 @@ static int bmd_read_header(AVFormatContext *s)
     ctx->conf.priv     = ctx;
 
     ctx->capture = decklink_capture_alloc(&ctx->conf);
-
-    av_log(s, AV_LOG_INFO, "capture alloc\n");
 
     if (!ctx->capture) {
         ret = AVERROR(EIO);
@@ -334,10 +328,11 @@ static int bmd_read_packet(AVFormatContext *s, AVPacket *pkt)
 #define O(x) offsetof(BMDCaptureContext, conf) + offsetof(DecklinkConf, x)
 #define D AV_OPT_FLAG_DECODING_PARAM
 static const AVOption options[] = {
-    { "instance", "Device instance", O(instance), AV_OPT_TYPE_INT, {.i64 = 0}, 0, INT_MAX, D },
-    { "video_mode", "Video mode", O(video_mode), AV_OPT_TYPE_INT, {.i64 = 0}, 0, INT_MAX, D },
-    { "video_connection", "Video mode", O(video_connection), AV_OPT_TYPE_INT, {.i64 = 0}, 0, INT_MAX, D },
-    { "audio_connection", "Video mode", O(audio_connection), AV_OPT_TYPE_INT, {.i64 = 0}, 0, INT_MAX, D },
+    { "instance",         "Device instance",    O(instance),         AV_OPT_TYPE_INT, {.i64 = 0}, 0, INT_MAX, D },
+    { "video_mode",       "Video mode",         O(video_mode),       AV_OPT_TYPE_INT, {.i64 = 0}, 0, INT_MAX, D },
+    { "video_connection", "Video connection",   O(video_connection), AV_OPT_TYPE_INT, {.i64 = 0}, 0, INT_MAX, D },
+    { "video_format",     "Video pixel format", O(pixel_format),     AV_OPT_TYPE_INT, {.i64 = 0}, 0, INT_MAX, D },
+    { "audio_connection", "Audio connection",   O(audio_connection), AV_OPT_TYPE_INT, {.i64 = 0}, 0, INT_MAX, D },
     { NULL },
 };
 
