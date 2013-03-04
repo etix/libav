@@ -201,8 +201,8 @@ static AVStream *add_video_stream(AVFormatContext *oc, DecklinkConf *conf)
     c->width         = conf->width;
     c->height        = conf->height;
 
-    c->time_base.den = conf->tb_den;
-    c->time_base.num = conf->tb_num;
+    st->time_base.den = conf->tb_den;
+    st->time_base.num = conf->tb_num;
 
     switch (conf->pixel_format) {
     // YUV first
