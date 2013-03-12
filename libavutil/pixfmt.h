@@ -181,6 +181,7 @@ enum AVPixelFormat {
     AV_PIX_FMT_VDPAU,     ///< HW acceleration through VDPAU, Picture.data[3] contains a VdpVideoSurface
     AV_PIX_FMT_XYZ12LE,      ///< packed XYZ 4:4:4, 36 bpp, (msb) 12X, 12Y, 12Z (lsb), the 2-byte value for each X/Y/Z is stored as little-endian, the 4 lower bits are set to 0
     AV_PIX_FMT_XYZ12BE,      ///< packed XYZ 4:4:4, 36 bpp, (msb) 12X, 12Y, 12Z (lsb), the 2-byte value for each X/Y/Z is stored as big-endian, the 4 lower bits are set to 0
+    AV_PIX_FMT_QSV_H264,  ///< H264/AVC HW decode with QSV, data[2] contains qsv_atom information for MFX_IOPATTERN_OUT_OPAQUE_MEMORY, MFX_IOPATTERN_OUT_VIDEO_MEMORY
     AV_PIX_FMT_NB,        ///< number of pixel formats, DO NOT USE THIS if you want to link with shared libav* because the number of formats might differ between versions
 
 #if FF_API_PIX_FMT
