@@ -522,7 +522,7 @@ static int qsv_decode_frame(AVCodecContext *avctx, void *data,
     int current_size          = avpkt->size;
     size_t frame_length       = 0, current_offset = 2;
     int frame_processed       = 0, surface_idx = 0, sync_idx = 0;
-    int ret_value             = 1, current_nal_size;
+    int ret_value             = 0, current_nal_size;
     mfxBitstream *input_bs = NULL;
     AVFrame *picture       = data;
 
@@ -576,9 +576,6 @@ static int qsv_decode_frame(AVCodecContext *avctx, void *data,
                                           qsv_decode->bs.TimeStamp, 0);
         }
 
-        av_log(avctx, AV_LOG_WARNING, "Decoding frame at %"PRId64"\n",
-               avpkt->pts);
-
         sts = MFX_ERR_NONE;
         // ignore warnings, where warnings >0 , and not error codes <0
         while (sts >= MFX_ERR_NONE ||
@@ -620,11 +617,6 @@ static int qsv_decode_frame(AVCodecContext *avctx, void *data,
                                                   qsv_decode->p_sync[sync_idx]);
 
             av_log(avctx, AV_LOG_INFO, "Return value %d\n", sts);
-
-            av_log(avctx, AV_LOG_INFO, "Bitstream %d %d %d \n",
-                   input_bs->DataLength,
-                   input_bs->MaxLength,
-                   input_bs->DataOffset);
 
             if (sts <= MFX_ERR_NONE &&
                 sts != MFX_WRN_DEVICE_BUSY &&
@@ -711,11 +703,6 @@ static int qsv_decode_frame(AVCodecContext *avctx, void *data,
 
         picture->pts     = new_stage->out.p_surface->Data.TimeStamp;
 
-        av_log(NULL, AV_LOG_INFO, "Frame Out %"PRId64", frame in "
-                                  "%"PRId64"/%"PRId64"\n",
-               new_stage->out.p_surface->Data.TimeStamp,
-               avpkt->pts, avpkt->dts);
-
 
         picture->repeat_pict = qsv_decode->m_mfxVideoParam.mfx.FrameInfo.PicStruct &
                                MFX_PICSTRUCT_FIELD_REPEATED;
@@ -726,9 +713,6 @@ static int qsv_decode_frame(AVCodecContext *avctx, void *data,
 
         // since we do not know it yet from MSDK, let's do just a simple way for now
         picture->key_frame = (avctx->frame_number == 0) ? 1 : 0;
-
-        av_log(avctx, AV_LOG_ERROR, "Format %4.4s\n",
-               (char *)&qsv_decode->m_mfxVideoParam.mfx.FrameInfo.FourCC);
 
         if (qsv_decode->m_mfxVideoParam.IOPattern ==
             MFX_IOPATTERN_OUT_SYSTEM_MEMORY) {
