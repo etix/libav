@@ -1151,6 +1151,16 @@ static int decode_video(InputStream *ist, AVPacket *pkt, int *got_output)
 
     decoded_frame->pts = guess_correct_pts(&ist->pts_ctx, decoded_frame->pkt_pts,
                                            decoded_frame->pkt_dts);
+
+    av_log(NULL, AV_LOG_ERROR, "Frame Out %"PRId64"/%"PRId64" "
+                                        "%"PRId64"/%"PRId64" "
+                              "Guess     %"PRId64" %d\n",
+           decoded_frame->pkt_pts,
+           decoded_frame->pkt_dts,
+           pkt->pts,
+           pkt->dts,
+           decoded_frame->pts, ret);
+
     pkt->size = 0;
 
     if (ist->st->sample_aspect_ratio.num)
