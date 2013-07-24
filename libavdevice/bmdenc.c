@@ -244,7 +244,8 @@ static int bmd_read_close(AVFormatContext *s)
 static int video_callback(void *priv, uint8_t *frame,
                           int width, int height, int stride,
                           int64_t timestamp,
-                          int64_t duration)
+                          int64_t duration,
+                          int64_t flags)
 {
     BMDCaptureContext *ctx = priv;
     AVPacket pkt;
@@ -264,7 +265,8 @@ static int video_callback(void *priv, uint8_t *frame,
 
 static int audio_callback(void *priv, uint8_t *frame,
                           int nb_samples,
-                          int64_t timestamp)
+                          int64_t timestamp,
+                          int64_t flags)
 {
     BMDCaptureContext *ctx = priv;
     AVCodecContext *c = ctx->audio_st->codec;
