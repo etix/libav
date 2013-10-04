@@ -55,19 +55,27 @@ const char *avscale_configuration(void);
 const char *avscale_license(void);
 
 /**
- * Allocate an empty AVSContext. This must be filled and passed to
- * avs_init_context(). For filling see AVOptions, options.c.
+ * Allocate an empty AVScaleContext.
+ *
+ * This can be configured using AVOption and passed to avscale_init_context() to
+ * initialize it early or used as-is directly in avscale_scale_frame().
+ *
+ * For filling see AVOptions, options.c.
+ *
+ * @return NULL on failure or a pointer to a newly allocated AVScaleContext
  */
-AVScaleContext *avs_alloc_context(void);
+AVScaleContext *avscale_alloc_context(void);
 
 /**
  * Initialize the avscaler context by allocating the pixel format conversion
  * chain and the scaling kernel.
  *
+ * @see avscale_scale_frame
+ *
  * @return zero or positive value on success, a negative value on
  * error
  */
-int avs_init_context(AVScaleContext *c);
+int avscale_init_context(AVScaleContext *c);
 
 /**
  * Get the AVClass for AVSContext. It can be used in combination with
@@ -75,43 +83,44 @@ int avs_init_context(AVScaleContext *c);
  *
  * @see av_opt_find().
  */
-const AVClass *avs_get_class(void);
+const AVClass *avscale_get_class(void);
 
 /**
- * Free the avscaler context AVSContext.
- * If AVSContext is NULL, then does nothing.
+ * Free the avscaler context AVScaleContext.
+ * If AVScaleContext is NULL, then does nothing.
  */
-void avs_free_context(AVScaleContext *c);
+void avscale_free_context(AVScaleContext *c);
 
 /**
  * Scale the image provided by an AVFrame in src and put the result
  * in dst.
  *
- * If the scaling context is not finalized (by calling avs_init_context)
- * or the frame pixel format and dimensions do not match the current
- * context the function would reconfigure it before scaling.
+ * If the scaling context is already configured (e.g. by calling
+ * avscale_init_context()) or the frame pixel format and dimensions
+ * do not match the current context the function would reconfigure
+ * it before scaling.
  *
  * @param c         The scaling context previously created
- *                  with avs_alloc_context()
- * @param src       The source frame
+ *                  with avscale_alloc_context()
  * @param dst       The destination frame
+ * @param src       The source frame
  * @return          0 on successo or AVERROR
  */
 
-int avs_scale_frame(AVScaleContext *c, AVFrame *src, AVFrame *dst);
+int avscale_scale_frame(AVScaleContext *c, AVFrame *dst, AVFrame *src);
 
 
 /**
  * Lock the scaling context to a specific source buffer.
  * Useful when using stateful scalers over slices.
  */
-int avs_scale_lock(AVScaleContext *c, AVFrame *src);
+int avscale_lock(AVScaleContext *c, AVFrame *src);
 
 /**
  * Unlock the scaling context to a specific source buffer.
  * Useful when using stateful scalers over slices.
  */
-int avs_scale_unlock(AVScaleContext *c, AVFrame *src);
+int avscale_unlock(AVScaleContext *c, AVFrame *src);
 
 /**
  * Scale the image provided by an AVFrame in src and put the result
