@@ -231,6 +231,7 @@ Toolchain options:
   --ar=AR                  use archive tool AR [$ar_default]
   --as=AS                  use assembler AS [$as_default]
   --cc=CC                  use C compiler CC [$cc_default]
+  --objc=OCC               use ObjC compiler OCC [$cc_default]
   --dep-cc=DEPCC           use dependency generator DEPCC [$cc_default]
   --ld=LD                  use linker LD
   --pkg-config=PKGCONF     use pkg-config PKGCONF [$pkg_config_default]
@@ -243,6 +244,7 @@ Toolchain options:
   --host-libs=HLIBS        use libs HLIBS when linking for host
   --host-os=OS             compiler host OS [$target_os]
   --extra-cflags=ECFLAGS   add ECFLAGS to CFLAGS [$CFLAGS]
+  --extra-objcflags=FLAGS  add FLAGS to OBJCFLAGS [$CFLAGS]
   --extra-ldflags=ELDFLAGS add ELDFLAGS to LDFLAGS [$LDFLAGS]
   --extra-libs=ELIBS       add ELIBS [$ELIBS]
   --extra-version=STRING   version string suffix []
@@ -664,6 +666,10 @@ add_cflags(){
 
 add_asflags(){
     append ASFLAGS $($asflags_filter "$@")
+}
+
+add_objcflags(){
+    append OBJCFLAGS $($objcflags_filter "$@")
 }
 
 add_ldflags(){
@@ -2201,6 +2207,9 @@ AS_O='-o $@'
 CC_C='-c'
 CC_E='-E -o $@'
 CC_O='-o $@'
+OBJC_C='-c'
+OBJC_E='-E -o $@'
+OBJC_O='-o $@'
 LD_O='-o $@'
 LD_LIB='-l%'
 LD_PATH='-L'
@@ -2405,6 +2414,7 @@ fi
 
 ar_default="${cross_prefix}${ar_default}"
 cc_default="${cross_prefix}${cc_default}"
+occ_default="${cross_prefix}${occ_default}"
 nm_default="${cross_prefix}${nm_default}"
 pkg_config_default="${cross_prefix}${pkg_config_default}"
 ranlib="${cross_prefix}${ranlib}"
@@ -2922,15 +2932,21 @@ test -n "$cc_type" && enable $cc_type ||
     warn "Unknown C compiler $cc, unable to select optimal CFLAGS"
 
 : ${as_default:=$cc}
+: ${objc_default:=$cc}
 : ${dep_cc_default:=$cc}
 : ${ld_default:=$cc}
 : ${host_ld_default:=$host_cc}
-set_default ar as dep_cc ld host_ld
+set_default ar as objc dep_cc ld host_ld
 
 probe_cc as "$as"
 asflags_filter=$_flags_filter
 add_asflags $_flags $_cflags
 set_ccvars AS
+
+probe_cc objc "$objc"
+objcflags_filter=$_flags_filter
+add_objcflags $_flags $_cflags
+set_ccvars OBJC
 
 probe_cc ld "$ld"
 ldflags_filter=$_flags_filter
@@ -4467,6 +4483,7 @@ CC_IDENT=$cc_ident
 ARCH=$arch
 CC=$cc
 AS=$as
+OBJC=$objc
 LD=$ld
 DEPCC=$dep_cc
 DEPCCFLAGS=$DEPCCFLAGS \$(CPPFLAGS)
@@ -4482,9 +4499,13 @@ STRIP=$strip
 LN_S=$ln_s
 CPPFLAGS=$CPPFLAGS
 CFLAGS=$CFLAGS
+OBJCFLAGS=$OBJCFLAGS
 ASFLAGS=$ASFLAGS
 AS_C=$AS_C
 AS_O=$AS_O
+OBJC_C=$OBJC_C
+OBJC_E=$OBJC_E
+OBJC_O=$OBJC_O
 CC_C=$CC_C
 CC_E=$CC_E
 CC_O=$CC_O
