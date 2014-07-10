@@ -60,6 +60,7 @@ typedef struct {
     uint16_t mult_sub_len; // total length of subpayloads array inside multiple payload
     uint8_t  pts_delta; // for subpayloads
     uint32_t packet_size;
+    uint32_t bitrate;
     uint64_t data_size; // data object size
 // presentation time offset, equal for all streams, should be equal to send time, !100-nanosecond units
     uint32_t pts; // presentation time
@@ -254,12 +255,14 @@ static int read_properties(AVFormatContext *s, GUIDParseTable *g)
 {
     ASFContext *asf = s->priv_data;
     AVIOContext *pb = s->pb;
-    uint64_t size, num_of_packets;
+    uint64_t object_size, file_size, num_of_packets;
     uint32_t min_packet_size, max_packet_size, max_bitrate;
 
-    size = read_obj_size(pb, g, asf->offset);
+    object_size = read_obj_size(pb, g, asf->offset);
     avio_skip(pb, 16); // skip File ID
-    size = avio_rl64(pb); //File size
+    file_size = avio_rl64(pb); //File size
+    av_log(s, AV_LOG_INFO, " Object size %"PRId64" File Size %"PRId64"\n",
+           object_size, file_size);
     avio_skip(pb, 8); // skip creation date
     num_of_packets = avio_rl64(pb);
     avio_skip(pb, 16); //skip play and send duration
@@ -268,8 +271,16 @@ static int read_properties(AVFormatContext *s, GUIDParseTable *g)
     min_packet_size = avio_rl32(pb);
     max_packet_size = avio_rl32(pb);
     max_bitrate     = avio_rl32(pb);
+
+    if (min_packet_size != max_packet_size) {
+        av_log(s, AV_LOG_INFO,
+               "min packet size %"PRIu32" max packet size %"PRIu32"\n",
+               min_packet_size, max_packet_size);
+    }
+
     asf->num_of_packets = num_of_packets;
     asf->packet_size    = max_packet_size;
+    asf->bitrate        = max_bitrate;
 
     return 0;
 }
@@ -503,6 +514,7 @@ static int read_subpayload(AVFormatContext *s, AVPacket *pkt, int is_header)
     AVIOContext *pb = s->pb;
     uint8_t sub_len;
     int64_t sub_offset;
+    int64_t remaining_data;
     int ret;
 
     if (is_header) {
@@ -519,7 +531,7 @@ static int read_subpayload(AVFormatContext *s, AVPacket *pkt, int is_header)
     sub_offset = avio_tell(pb);
     if ((ret = av_get_packet(pb, pkt, sub_len)) < 0)
         return ret;
-    printf("     Sub-Payload at position %"PRId64" of length %"PRIu8" pos %d\n",
+    printf("     Sub-Payload at position %"PRId64" of length %"PRIu8" pos %"PRId64"\n",
            sub_offset, sub_len, avio_tell(pb));
     asf->num_of_sub++;
     pkt->pts = asf->pts + asf->num_of_sub * asf->pts_delta;
@@ -527,8 +539,13 @@ static int read_subpayload(AVFormatContext *s, AVPacket *pkt, int is_header)
         asf->sub_left = 0;
         asf->num_of_mult_left--;
     }
-    printf("sub offset %d, if %d, asf->packet_offset \n", sub_offset, asf->packet_offset + asf->packet_size - asf->pad_len - sub_len - asf->pad_len);
-    if (avio_tell(pb) >= (asf->packet_offset + asf->packet_size - asf->pad_len - asf->rep_len - sub_len)) {
+
+    remaining_data = asf->packet_size - asf->pad_len - asf->rep_len - sub_len;
+
+    printf("sub offset %"PRId64", if %"PRId64", asf->packet_offset \n",
+           sub_offset,
+           remaining_data);
+    if (avio_tell(pb) >= asf->packet_offset + remaining_data) {
         asf->sub_left = 0;
         if (!asf->num_of_mult_left) {
             avio_skip(pb, asf->pad_len);
@@ -628,7 +645,7 @@ static int read_packet_header(AVFormatContext *s)
     ASFContext *asf = s->priv_data;
     AVIOContext *pb = s->pb;
     uint64_t size;
-    uint32_t packet_len, seq, pts;
+    uint32_t packet_len, seq;
     unsigned char error_flags, len_flags, pay_flags;
 
     asf->packet_offset = avio_tell(pb);
@@ -651,8 +668,10 @@ static int read_packet_header(AVFormatContext *s)
     if (len_flags & ASF_PPI_FLAG_MULTIPLE_PAYLOADS_PRESENT) { // Multiple Payloads present
         pay_flags = avio_r8(pb);
         asf->num_of_mult_left = (pay_flags & ASF_NUM_OF_PAYLOADS);
-        printf("Multiple payload at one packet present: %d payloads\n", asf->num_of_mult_left + 1);
+        //printf("Multiple payload at one packet present: %"PRIu64" payloads\n", asf->num_of_mult_left + 1);
     }
+
+    av_log(s, AV_LOG_VERBOSE, "Sequence %"PRIu32" Packet length %"PRIu32"\n", seq, packet_len);
 
     return 0;
 }
@@ -751,15 +770,15 @@ static int asf_read_header(AVFormatContext *s)
     if (ff_guidcmp(&guid, &ff_asf_header))
         return AVERROR_INVALIDDATA;
     size = avio_rl64(pb); // header object size
-    printf("Header Object detected, size %d\n", size);
+    printf("Header Object detected, size %"PRId64"\n", size);
     avio_skip(pb, 6); // skip number of header objects and 2 reserved bytes
     asf->data_reached = 0;
-    while (1) {
+    while (!pb->eof_reached) {
         asf->offset = avio_tell(pb);
         if ((ret = ff_get_guid(pb, &guid)) < 0)
             return ret;
-        swap_guid(&guid);
-        g = find_guid(&guid, g);
+        swap_guid(guid);
+        g = find_guid(guid, g);
         if (g) {
             if ((ret = g->read_object(s, g)) < 0) {
                 printf(" read object ret %d\n", ret);
