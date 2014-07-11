@@ -115,6 +115,7 @@ Component options:
   --disable-avdevice       disable libavdevice build
   --disable-avcodec        disable libavcodec build
   --disable-avformat       disable libavformat build
+  --disable-avscale        disable libavscale build
   --disable-avutil         disable libavutil build
   --disable-swscale        disable libswscale build
   --disable-avfilter       disable video filter support [no]
@@ -1170,6 +1171,7 @@ EXTERNAL_LIBRARY_LIST="
 "
 
 FEATURE_LIST="
+    avscale_swscale
     gray
     hardcoded_tables
     runtime_cpudetect
@@ -1194,6 +1196,7 @@ LIBRARY_LIST="
     avfilter
     avformat
     avresample
+    avscale
     avutil
     swscale
 "
@@ -2142,6 +2145,7 @@ avdevice_deps="avformat avcodec avutil"
 avfilter_deps="avutil"
 avformat_deps="avcodec avutil"
 avresample_deps="avutil"
+avscale_deps="avutil"
 swscale_deps="avutil"
 
 # programs
@@ -2205,6 +2209,7 @@ enable optimizations
 enable safe_bitstream_reader
 enable static
 enable swscale_alpha
+enable avscale_swscale
 
 # By default, enable only those hwaccels that have no external dependencies.
 enable dxva2 vdpau
@@ -4232,7 +4237,7 @@ check_disable_warning -Wno-pointer-sign
 
 # add some linker flags
 check_ldflags -Wl,--warn-common
-check_ldflags -Wl,-rpath-link=libswscale:libavfilter:libavdevice:libavformat:libavcodec:libavutil:libavresample
+check_ldflags -Wl,-rpath-link=libswscale:libavfilter:libavdevice:libavformat:libavcodec:libavutil:libavresample:libavscale
 test_ldflags -Wl,-Bsymbolic && append SHFLAGS -Wl,-Bsymbolic
 
 # add some strip flags
@@ -4423,6 +4428,7 @@ for thread in $THREADS_LIST; do
 done
 
 # conditional library dependencies, in linking order
+enabled avscale_swscale && prepend avscale_deps "swscale"
 enabled movie_filter    && prepend avfilter_deps "avformat avcodec"
 enabled resample_filter && prepend avfilter_deps "avresample"
 enabled scale_filter    && prepend avfilter_deps "swscale"
@@ -4757,5 +4763,6 @@ pkgconfig_generate libavcodec    "Libav codec library"            "$LIBAVCODEC_V
 pkgconfig_generate libavformat   "Libav container format library" "$LIBAVFORMAT_VERSION"   "$extralibs"
 pkgconfig_generate libavdevice   "Libav device handling library"  "$LIBAVDEVICE_VERSION"   "$extralibs"
 pkgconfig_generate libavfilter   "Libav video filtering library"  "$LIBAVFILTER_VERSION"   "$extralibs"
+pkgconfig_generate libavscale    "Libav image rescaling library"  "$LIBAVSCALE_VERSION"    "$LIBM"
 pkgconfig_generate libavresample "Libav audio resampling library" "$LIBAVRESAMPLE_VERSION" "$extralibs"
 pkgconfig_generate libswscale    "Libav image rescaling library"  "$LIBSWSCALE_VERSION"    "$LIBM"

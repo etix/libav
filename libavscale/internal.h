@@ -29,6 +29,6 @@ typedef struct AVScaleContext {
     int out_width, out_height;
     int out_format;
     void *priv;
-} AVSContext;
+} AVScaleContext;
 
 #endif /* AVSCALE_AVSCALE_H */
