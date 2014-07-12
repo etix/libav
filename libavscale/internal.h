@@ -21,9 +21,17 @@
 #ifndef AVSCALE_INTERNAL_H
 #define AVSCALE_INTERNAL_H
 
+typedef struct AVScale {
+    const char *name;
+    int (*init)(AVScaleContext *);
+    void (*close)(AVScaleContext *);
+    int capabilities;
+    int priv_data_size;
+} AVScale;
+
 typedef struct AVScaleContext {
-    AVClass *c;
-    AVScale *scaler;
+    AVClass *av_class;
+    const struct AVScale *backend;
     int in_width, in_height;
     int in_format;
     int out_width, out_height;
