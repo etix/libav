@@ -160,6 +160,8 @@ static AVStream *add_audio_stream(AVFormatContext *oc, DecklinkConf *conf)
     if (!st)
         return NULL;
 
+    st->time_base  = (AVRational){1, 48000};
+
     c              = st->codec;
     c->codec_type  = AVMEDIA_TYPE_AUDIO;
     c->sample_rate = 48000;
@@ -203,6 +205,9 @@ static AVStream *add_video_stream(AVFormatContext *oc, DecklinkConf *conf)
 
     st->time_base.den = conf->tb_den;
     st->time_base.num = conf->tb_num;
+
+    st->avg_frame_rate.num = conf->tb_den;
+    st->avg_frame_rate.den = conf->tb_num;
 
     switch (conf->pixel_format) {
     // YUV first
@@ -276,7 +281,7 @@ static int audio_callback(void *priv, uint8_t *frame,
 
     pkt.size          = nb_samples * c->channels *
                         (ctx->conf.audio_sample_depth / 8);
-    pkt.dts = pkt.pts = timestamp / ctx->audio_st->time_base.num;
+    pkt.dts = pkt.pts = timestamp;
     pkt.flags        |= AV_PKT_FLAG_KEY;
     pkt.stream_index  = ctx->audio_st->index;
     pkt.data          = frame;
